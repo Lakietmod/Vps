@@ -1,0 +1,108 @@
+name: Create VPS (Auto Restart)
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [create-vps]
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  start-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      TMATE_SERVER: sfo2.tmate.io
+
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📁 Prepare Directories
+        run: |
+          mkdir -p links .backup
+
+      - name: 💾 Restore Backup (optional)
+        run: |
+          name="${{ github.event.client_payload.vps_name || 'manual-vps' }}"
+          if [ -f ".backup/$name.zip" ]; then
+            unzip ".backup/$name.zip" -d . || echo "⚠️ Không thể giải nén backup hoặc không tìm thấy file."
+          else
+            echo "⚠️ No backup file (.backup/$name.zip) found. Starting fresh."
+          fi
+
+      - name: 🔐 Start Tmate Session
+        run: |
+          sudo apt update -y && sudo apt install -y tmate
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+          SSH_CONNECTION=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          cd "$GITHUB_WORKSPACE" 
+          echo "✅ Tmate đã khởi chạy. Sẵn sàng để SSH."
+
+          echo "$SSH_CONNECTION" > "links/autovps.txt"
+          echo "-----------------------------------------"
+          echo "Link Tmate SSH của bạn là:"
+          echo "$SSH_CONNECTION"
+          echo "-----------------------------------------"
+
+      - name: ⚙️ Install Python Dependencies
+        run: |
+          sudo apt install python3-pip -y
+          pip install bs4 Pillow pyfiglet pycryptodome munch websockets aiohttp fbchat emoji psutil gtts speedtest removebg deep_translator
+          echo "✅ Đã cài đặt các thư viện Python cần thiết."
+
+      - name:  💻 Setup By Kietlaanh 
+        run: |
+          echo " By L A K "
+
+      - name: 💻 Install Neofetch
+        run: |
+          sudo apt update -y
+          sudo apt install neofetch -y
+          echo "✅ Neofetch đã được cài đặt."
+          echo "Bạn có thể chạy 'neofetch' sau khi SSH vào."
+
+      - name: 🚀 Start Playit Tunnel (optional)
+        run: |
+          wget -q https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-linux-amd64 -O playit
+          chmod +x playit
+          nohup ./playit > playit.log 2>&1 &
+          echo "✅ Playit đã khởi chạy trong nền."
+
+      - name: 📦 Save Backup
+        run: |
+          name="${{ github.event.client_payload.vps_name || 'manual-vps' }}"
+          zip -qr ".backup/$name.zip" . -x ".git/*" ".github/*" ".backup/*" "links/*" "bot.log" "playit.log" "playit" || true
+          echo "📦 Đã tạo backup dữ liệu."
+
+      - name: 📤 Push Updated Files (SSH link + Backup)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🔁 Updated SSH + backup"
+          file_pattern: 'links/*.txt .backup/*.zip'
+          branch: main
+          push_options: '--force'
+
+      - name: ⏳ Keep VPS Alive
+        run: |
+          for i in $(seq 1 $((358))); do
+            echo "🟢 Đang chạy phút thứ $i/358..."
+            sleep 60
+          done
+
+      - name: 🔁 Restart Workflow
+        if: always()
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PAT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type": "create-vps", "client_payload": {"vps_name": "manual-vps", "backup": true}}'
