@@ -58,10 +58,6 @@ jobs:
           pip install bs4 Pillow pyfiglet pycryptodome munch websockets aiohttp fbchat emoji psutil gtts speedtest removebg deep_translator
           echo "✅ Đã cài đặt các thư viện Python cần thiết."
 
-      - name:  💻 Setup By Kietlaanh 
-        run: |
-          echo " By L A K "
-
       - name: 💻 Install Neofetch
         run: |
           sudo apt update -y
