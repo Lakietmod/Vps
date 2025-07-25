@@ -52,11 +52,18 @@ jobs:
           echo "$SSH_CONNECTION"
           echo "-----------------------------------------"
 
-      - name: ⚙️ Install Python Dependencies
+      - name: ⚙️ Install Python & Node.js Dependencies
         run: |
-          sudo apt install python3-pip -y
-          pip install bs4 Pillow pyfiglet pycryptodome munch websockets aiohttp fbchat emoji psutil gtts speedtest removebg deep_translator
-          echo "✅ Đã cài đặt các thư viện Python cần thiết."
+          sudo apt update -y
+          sudo apt install -y python3-pip nodejs npm unzip # Thêm unzip ở đây
+          
+          # Cài đặt thư viện Python
+          pip install argparse requests colorama datetime threading aiohttp multiprocess console bs4 beautifulsoup4 Anime Pillow pyfiglet pycryptodome munch websockets fbchat emoji psutil gtts speedtest removebg deep_translator
+          
+          # Cài đặt thư viện Node.js
+          npm install user-agents fake-useragent header-generator randomstring cloudscraper cluster axios gradient-string colors cheerio random-useragent
+          
+          echo "✅ Đã cài đặt tất cả các thư viện Python và Node.js cần thiết."
 
       - name: 💻 Install Neofetch
         run: |
