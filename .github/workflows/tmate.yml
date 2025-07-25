@@ -55,10 +55,10 @@ jobs:
       - name: ⚙️ Install Python & Node.js Dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y python3-pip nodejs npm unzip # Thêm unzip ở đây
+          sudo apt install -y python3-pip nodejs npm unzip
           
-          # Cài đặt thư viện Python
-          pip install argparse requests colorama datetime threading aiohttp multiprocess console bs4 beautifulsoup4 Anime Pillow pyfiglet pycryptodome munch websockets fbchat emoji psutil gtts speedtest removebg deep_translator
+          # Cài đặt thư viện Python - Đã xóa 'threading'
+          pip install argparse requests colorama datetime aiohttp multiprocess console bs4 beautifulsoup4 Anime Pillow pyfiglet pycryptodome munch websockets fbchat emoji psutil gtts speedtest removebg deep_translator
           
           # Cài đặt thư viện Node.js
           npm install user-agents fake-useragent header-generator randomstring cloudscraper cluster axios gradient-string colors cheerio random-useragent
